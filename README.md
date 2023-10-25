@@ -5,7 +5,7 @@ The code is developed for real-time deap learning based SIM reconstruction and i
 - [Environment](#Environment)
 - [Requirement](#Requirement)
 - [File structure](#Filestructure)
-- [Running guide:Test pre-trained models](#Running guide:Testpre-trained models)
+- [Running guide](#Runningguide)
 
 ## Environment
 GPU: NVIDIA GeForce RTX 3050Ti  
@@ -46,7 +46,7 @@ zipp==3.10.0
 - ```./utils``` is the tool package of VSR  
 - ```./weight``` place pre-trained VSR model here for testing  
 
-## Running guide:Test pre-trained models
+## Running guide
 - Download pre-trained models of VSR and place them in ```./weight/```   
 - Download test data and place them in ```./test/images/```. Also, you can prepare other testing data
 - Open your terminal and run ```predict.py```
