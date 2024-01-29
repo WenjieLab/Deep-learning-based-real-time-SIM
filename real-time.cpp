@@ -1,7 +1,5 @@
-﻿// DLsim_test_v1.cpp : 此文件包含 "main" 函数。程序执行将在此处开始并结束。
-//
+﻿// DLsim_test_v1.cpp 
 
-//
 
 #include <stdio.h>
 #include "tensorflow/c/c_api.h"
@@ -34,7 +32,7 @@ const char* inpath = "img/128\\*.tif";
 TF_Session* session;
 // 记录时间
 clock_t start_time, end_time;
-//GPU设置
+// GPU设置
 //shijei uint8_t config[16] = { 0x32, 0xe, 0x9, 0x1d, 0x5a, 0x64, 0x3b, 0xdf, 0x4f, 0xd5, 0x3f, 0x20, 0x1, 0x2a, 0x1, 0x30 };
 uint8_t config[16] = { 0x32, 0xe, 0x9, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0xd3, 0x3f, 0x20, 0x1, 0x2a, 0x1, 0x30 };
 //0.7 uint8_t config[16] = { 0x32, 0xe, 0x9, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0xe6, 0x3f, 0x20, 0x1, 0x2a, 0x1, 0x30 };
@@ -45,7 +43,7 @@ void version()
 	printf("This TensorFlow Version is %s.\n", TF_Version());
 }
 
-// 这个函数用于创建TF_Tensor时的某个参数
+// 创建TF_Tensor参数
 static void DeallocateTensor(void* data, std::size_t, void*)
 {
 	std::free(data);
@@ -54,12 +52,11 @@ static void DeallocateTensor(void* data, std::size_t, void*)
 #endif
 }
 
-// 这一段是主要的识别逻辑，参数是一个包含float类型数据的vector                         
+// 识别逻辑                     
 char predict_sim(vector<float> vecs)
 {
 	/*
-	验证模型是否加载成功，此处为了消除警告，我修改了TF_Code的声明
-	如果报错，修改为TF_GetCode(status) == TF_OK即可
+	验证模型是否加载成功
 	*/
 	char f = 'K';
 	if (TF_GetCode(status) == TF_Code::TF_OK)
@@ -79,7 +76,6 @@ char predict_sim(vector<float> vecs)
 	int num_outputs = 1;
 	// 申请内存
 	TF_Output* output = (TF_Output*)malloc(sizeof(TF_Output) * num_outputs);
-	// StatefulPartitionedCall是之前获取到的输出层名字，0是冒号后面的数字
 	TF_Output out = { TF_GraphOperationByName(graph,"StatefulPartitionedCall"), 0 };
 	// 验证Graph是否获取成功
 	if (!out.oper) {
@@ -96,9 +92,7 @@ char predict_sim(vector<float> vecs)
 	output[0] = out;
 	// 输入层的数量
 	int num_inputs = 1;
-	// input要用TF_Output来声明
 	TF_Output* input = (TF_Output*)malloc(sizeof(TF_Output) * num_inputs);
-	// serving_default_input是之前获取到输入层名字，0就是冒号后面跟的数字
 	TF_Output in = { TF_GraphOperationByName(graph,"serving_default_input_1"), 0 };
 	// 验证Graph是否获取成功
 	if (!in.oper) {
@@ -117,23 +111,17 @@ char predict_sim(vector<float> vecs)
 	// 申请内存
 	TF_Tensor** input_values = (TF_Tensor**)malloc(sizeof(TF_Tensor*) * num_inputs);
 	TF_Tensor** output_values = (TF_Tensor**)malloc(sizeof(TF_Tensor*) * num_outputs);
-	// 创建指定大小的数组，这个要和输入层的shape对应
-	// saved_model_cli输出的是(-1,pixelsize,pixelsize,1)，但是这里不能写负数
 	const array<int64, 4> dims = { 1,pixelsize,pixelsize,9 };
 	const array<int64, 4> dim = { 1,outsize,outsize,1 };
-	// float变量的大小，用于申请内存
 	size_t size = sizeof(float);
 	// 1*pixelsize*pixelsize*9*size
 	for (auto i : dims) {
 		size *= abs(i);
 	}
-	// 申请一块内存，存放输入层的数据
 	auto data = static_cast<float*>(malloc(size));
-	// 将vecs中的数据拷贝给data
 	std::copy(vecs.begin(), vecs.end(), data);
 	/*
-	创建TF_Tensor，此处为了消除警告，修改了TF_DataType的声明
-	如果报错，TF_DataType::TF_FLOAT修改为TF_FLOAT即可
+	创建TF_Tensor
 	*/
 	TF_Tensor* tensor = TF_NewTensor(TF_DataType::TF_FLOAT,
 		dims.data(),
@@ -167,9 +155,7 @@ char predict_sim(vector<float> vecs)
 			return PREDICT_ERROR;
 		}
 	}
-	// 根据tensor创建识别用的数据
 	auto tf_data = static_cast<float*>(TF_TensorData(tensor));
-	// 验证数据在流转过程中是否发生了变动
 	for (int i = 0; i < vecs.size(); i++) {
 		if (tf_data[i] != vecs[i]) {
 #ifdef _DEBUG
@@ -178,10 +164,8 @@ char predict_sim(vector<float> vecs)
 			return PREDICT_ERROR;
 		}
 	}
-	// 输入层数据，看样子可以一次识别多个
 	input_values[0] = tensor;
 	//start_time = clock();
-	// 调用TF_SessionRun，开始识别，识别结果保存到output_values中
 	TF_SessionRun(session, NULL, input, input_values, num_inputs, output, output_values, num_outputs, NULL, 0, NULL, status);
 	// 验证状态
 	//end_time = clock();
@@ -198,7 +182,7 @@ char predict_sim(vector<float> vecs)
 #endif
 		return PREDICT_ERROR;
 	}
-	//获取模型输出数据
+	// 获取模型输出数据
 	TF_Tensor * inp = output_values[0];
 	auto tf_da = static_cast<float*>(TF_TensorData(inp));
 	auto inpp = TF_TensorData(inp);
@@ -256,7 +240,7 @@ char predict_sim(vector<float> vecs)
 	 //cout << max_value << endl;
 	 //cout << letter[max_location] << endl;
 #endif
-	// 释放内存，这很重要！
+	// 释放内存
 	free(input);
 	free(output);
 	free(input_values);
@@ -276,7 +260,7 @@ void freesession() {
 	TF_DeleteStatus(status);
 }
 
-// 用于分割图片（没用到）
+// 用于分割图片
 cv::Mat split_img(cv::Mat img, int shape[]) {
 	cv::Mat region_img = cv::Mat(cv::Size(shape[1] - shape[0], 25), CV_8UC3, cv::Scalar(255, 255, 255));
 	for (int i = 0; i < img.rows; i++) {
@@ -304,33 +288,27 @@ void te(vector<float> vecs) {
 	cv::waitKey(0);
 
 }
-// 用于输入格式的转换，参数为输入图片文件夹路径
 string predict(std::string inPath) {
-	// 声明两个Mat，一个用于读取sim九张图，一个用于存储分割后的字符图片
 	cv::Mat img;
 	int samples_size[3];
-	//存储九张图;
+	// 存储九张图;
 	samples_size[2] = pixelsize;
 	samples_size[1] = pixelsize;
 	samples_size[0] = 9;
 	cv::Mat m_3 = cv::Mat::zeros(3, samples_size, CV_32F);
 
 	string result = "";
-	// 存储单通道像素点数据的集合
 	vector<float> temp = {};
-	// 查找文件句柄
 	intptr_t handle;
 	int c = 0;
 	struct _finddata_t fileinfo;
-	// 第一次查找tif文件
 	handle = _findfirst(inPath.c_str(), &fileinfo);
 	if (handle == -1)
 		return "Error: no such file";
 	do
 	{
-		// 根据找到的文件名，补充图片路径(相对路径)
 		string filepath = input_filepath+ (string)fileinfo.name;
-		// 读取到存储矩阵中
+		// 读取到存储矩阵
 		img = cv::imread(filepath,CV_16U);
 		cv::normalize(img, img, 0.0, 255.0, CV_MINMAX);
 		img.convertTo(img, CV_8U);
@@ -355,7 +333,7 @@ string predict(std::string inPath) {
 	for (int h = 0; h < pixelsize; h++) {
 		for (int w = 0; w < pixelsize; w++) {
 			for (int c = 0; c < 9; c++) {
-				//存储为vector;
+				//存储为vector
 				id1 = pixelsize * h + w;
 				temp.push_back((float)((m_3.at<float>(c, h, w)) / 255.0));
 			}
@@ -367,7 +345,6 @@ string predict(std::string inPath) {
 	end_time = clock();
 	printf("predict_sim_time: %fs\n", (float)(end_time - start_time) / CLOCKS_PER_SEC);
 
-	// 验证是否遇到问题，如果结果字符串中出现了'A'，说明一定是哪个环节出错了
 	if (result.find(PREDICT_ERROR) == result.npos) //没有找到PREDICT_ERROR
 	{
 		return "ok";
@@ -381,7 +358,6 @@ int main(int nargv, const char* argvs[]) {
 	version();
 	TF_SetConfig(session_opts, (void*)config, 16, status);
 	session = TF_NewSession(graph, session_opts, status);
-	// 如果是在命令行执行，且传递了图片路径作为参数，则单独进行识别
 	if (nargv > 1) {
 		session = TF_LoadSessionFromSavedModel(session_opts, run_opts, saved_model_dir, &tags, ntags, graph, NULL, status);
 		string result = "";
@@ -389,11 +365,8 @@ int main(int nargv, const char* argvs[]) {
 		const char* test = result.c_str();
 		printf("%s\n", test);
 	}
-	// 否则，遍历目标文件夹下的所有tif文件输入网络
 	else {
 		// 记录开始时间
-
-
 		// 加载模型
 		session = TF_LoadSessionFromSavedModel(session_opts, run_opts, saved_model_dir, &tags, ntags, graph, NULL, status);
 		string result = "";
@@ -410,14 +383,3 @@ int main(int nargv, const char* argvs[]) {
 	// 释放内存
 	freesession();
 }
-
-// 运行程序: Ctrl + F5 或调试 >“开始执行(不调试)”菜单
-// 调试程序: F5 或调试 >“开始调试”菜单
-
-// 入门使用技巧: 
-//   1. 使用解决方案资源管理器窗口添加/管理文件
-//   2. 使用团队资源管理器窗口连接到源代码管理
-//   3. 使用输出窗口查看生成输出和其他消息
-//   4. 使用错误列表窗口查看错误
-//   5. 转到“项目”>“添加新项”以创建新的代码文件，或转到“项目”>“添加现有项”以将现有代码文件添加到项目
-//   6. 将来，若要再次打开此项目，请转到“文件”>“打开”>“项目”并选择 .sln 文件
