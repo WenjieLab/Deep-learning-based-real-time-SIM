@@ -1,5 +1,5 @@
-# VSR-SIM
-The code is developed for real-time deap learning based SIM reconstruction, VSR-SIM, and is related to the paper XXX (will be updated soon). 
+# VDL-SIM
+The code is developed for real-time deap learning based SIM reconstruction, VDL-SIM, and is related to the paper A0-23-10003. 
 
 ## Contents
 - [Environment](#Environment)
@@ -41,13 +41,14 @@ torchvision==0.14.1+cu116
 zipp==3.10.0  
 
 ## File structure
-- ```./models``` includes declaration of VSR model  
-- ```./test``` includes some different SNR demo images of microtubules to test VSR model  
-- ```./utils``` is the tool package of VSR  
-- ```./weight``` place pre-trained VSR model here for testing  
+- ```./models``` includes declaration of VDL-SIM model  
+- ```./test``` includes some different SNR demo images of microtubules to test VDL-SIM model  
+- ```./utils``` is the tool package of VDL-SIM  
+- ```./weight``` place pre-trained VDL-SIM model here for testing
+- ```./models``` includes C++ interface for code
 
 ## Running guide
-- Download pre-trained models of VSR and place them in ```./weight/```   
+- Download pre-trained models of VDL-SIM and place them in ```./weight/```   
 - Download test data and place them in ```./test/images/```. Also, you can prepare other testing data
 - Open your terminal and run ```predict.py```
 - The output SR images will be saved in ```./test/images/output_resu-SIM_weight-SIM/```
