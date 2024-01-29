@@ -22,13 +22,13 @@ TF_Graph* graph = TF_NewGraph();
 TF_Status* status = TF_NewStatus();
 TF_SessionOptions* session_opts = TF_NewSessionOptions();
 TF_Buffer* run_opts = NULL;
-const char* saved_model_dir = "saved_model/save_model";
+const char* saved_model_dir = "saved_model";
 const char* tags = "serve";
 int ntags = 1;
 int pixelsize = 128;
 int outsize = 256;
-const char* input_filepath = "img/128/";
-const char* inpath = "img/128\\*.tif";
+const char* input_filepath = "your img path";
+const char* inpath = "your img path\\*.tif";
 TF_Session* session;
 // 记录时间
 clock_t start_time, end_time;
