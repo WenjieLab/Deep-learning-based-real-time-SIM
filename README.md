@@ -1,5 +1,6 @@
 # VDL-SIM
-The code is developed for real-time deap learning based SIM reconstruction, VDL-SIM, and is related to the paper A0-23-10003. 
+The code is developed for real-time deap learning based SIM reconstruction, VDL-SIM, and is related to our paper:
+Video-level and high-fidelity super-resolution SIM reconstruction enabled by deep learning
 
 ## Contents
 - [Environment](#Environment)
